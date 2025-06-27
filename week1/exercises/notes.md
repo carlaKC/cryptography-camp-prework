@@ -64,6 +64,21 @@ iff a = a1 and b = b1.
 This is the set of all possible unique pairs that can be made across
 sets.
 
+A function from S to T is a rule that assigns each element of S to
+a unique element of T. To decide whether two mappings are equal for
+S -> T we look at different classifications of functions f: S -> T:
+- surjective:
+  - every t ∈ T is the image under f of some s ∈ S
+  - ie, for every t ∈ E, there exists s ∈ S where t = f(s)
+- one-to-one:
+  - if for s1 != s2 in S, f(s1) != f(s2)
+  - f(s1) = f(s2) -> s1 = s2
+  - This maps distinct objects to distinct images
+- bijection: both one-to-one and surjective 
+
+Note: Stopping on page 10, this is background and I haven't needed it
+yet.
+
 ## Interlude
 
 Public Key Function: G: Kpriv -> Kpub
@@ -149,6 +164,44 @@ m. This is called Euler's phi function:
 φ(n) = # (ℤ/mℤ*) = #{ 0 <= a <= m: gcd(a, m) = 1}
 (# = count in set)
 
+Fast multiplication:
+- In cryptography applications, we often need to compute large powers
+  of a number g modulo N, where N may be massive
+- Naively, we can do this with repeated multiplications
+  g1 ≡  g (mod N)
+  g2 ≡  g * g1 (mod N)
+  g3 ≡  g * g2 (mod N)
+  ...
+  ga ≡  g * g(a-1) (mod N)
+
+Computing 2^1000 would take longer than the known age of the universe.
+
+We can use binary expansion of the exponent A to simplify this to a
+series of squares and multiplications eg: 3^218:
+- Express 218 as a sum of powers of 2
+- Express 3 to the power of those powers of 2
+= 3 ^ 2 * 3 ^ (2^3) * 3 ^ (2^4) * 3 ^ (2^6) * 3 ^ (2^7)
+
+Each exponent is the square of the previous one, so we can express
+this quite simply.
+
+When we compute the product, we can also take the modulo after each
+multiplication so we never have to hold large values.
+
+Steps in this algorithm:
+1. Compute the binary expansion of A as:
+   A = A0 + A1*2 + A2 * 2^2 ... + Ar * 2^r
+2. Compute the powers of g^2^i (mod n) for 0 <= i < r
+   Each term is the square of the previous one
+3. Compute g^A using the formuala:
+  g^A = g^( A0 + ... + Ar*2^r)
+      = a0 * a1 ... ar^Ar (mod N)
+
+Running time:
+- It takes at most 2r multiplications modulo N to compute g^A. 
+- Since A >= 2^r it takes at most 2log2(A) multiplications modulo N
+
+It takes
 ## Reading 3a
 
 - An integer is prime if p > 1 and the only positive integer divisors
