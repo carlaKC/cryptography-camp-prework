@@ -148,3 +148,35 @@ m. This is called Euler's phi function:
 
 φ(n) = # (ℤ/mℤ*) = #{ 0 <= a <= m: gcd(a, m) = 1}
 (# = count in set)
+
+## Reading 3a
+
+- An integer is prime if p > 1 and the only positive integer divisors
+  of p are 1 and p.
+- Note that we could easily include 1 in the primes, it's our
+  definition, but then we'd break things like prime exponentiation,
+  so we choose to exclude it.
+
+An element p of a ring is prime if:
+- It is non-zero
+- It has no multiplicative inverse
+- If p | a * b -> p | a or p | b
+
+The fundamental theorum of arithmetic:
+
+Every positive integer can be expressed as a produce of primes, and
+the factorization is unique.
+
+Again, prime numbers technically only include one number in this
+"product", be we choose to include these "degenerate" products to
+suit our use of this theory in practice. Without allowing this
+empty product, we'd also need a special carve out for 1, as it's
+not a produce of primes, except for raising a prime to the power
+of zero.
+
+Proof: in remarkable sheet for the week
+
+## Reading 3b
+
+Division, Euclidean Algorithm and GCD: all covered in Furzey's course.
+
