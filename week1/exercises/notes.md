@@ -64,3 +64,87 @@ iff a = a1 and b = b1.
 This is the set of all possible unique pairs that can be made across
 sets.
 
+## Interlude
+
+Public Key Function: G: Kpriv -> Kpub
+Encryption Function: E: M x Kpub -> C
+Decryption Function: D: C x Kpriv -> M
+
+We will use p to denote a prime integer.
+We're interested in a set of integers modulo a prive, ℤ/ℤp (or ℤp / Fp)
+
+## Reading 2
+
+Focus: an efficient algorithm for modular exponentiation.
+
+We will be using the pubkey function:
+g ∈ ℤp be a fixed non-zero number
+G : ℤp -> ℤp is our pubkey function
+
+G(x) = g^x mod p
+     = g * g ... * g mod p (x times)
+
+We define congruence for a, b, m ∈ ℤ:
+a ≡ b (mod m) <-> m | a - b 
+
+Read as: a is congruent to b mod m if m divides their difference.
+
+When we have a zero congruence, we're expressing all of the numbers
+that are multiples of m: a ≡ 0 (mod m), true for any a where m | a.
+
+Proposition 1.13 (a): proven in remarkable sheet for the week.
+- Addition and multiplication properties hold for congruences
+
+Proposition 1.13 (b):
+
+a * b ≡ 1 (mod m) for some interger b iff gcd(a,m) = 1
+
+If b exists, it it is the multiplicative inverse of a modulo m.
+There is only one inverse, as any two inverses are congruent mod m.
+
+This is like the recipricol with fractions:
+- The recipricol of 2/3 is 3/2, because it's the number you multiply
+  it by to get 1.
+
+In a * b ≡ 1 (mod m), b is the number that you multiply a by to make
+it congruent modulo 1.
+
+Proof: in remarkable sheet for the week.
+
+We can use the euclidean algorithm to find the GCD of two numbers.
+- It takes 2 log2(b) + 3 iterations to fund gcd(a,b)
+- It takes a small multiple of log2(m) steps to find inverse
+
+We express remainders as:
+a = m * q + r, with 0 <= r < m
+
+We therefore know that a ≡ r (mod m) because:
+a - r = m * q
+m | a - r
+a ≡ r (mod m)
+
+We express the ring of integers modulo m as:
+ℤ/mℤ = {0, 1, 2, ... m -1}
+
+Whenever we perform addition or multiplication in ℤm, we always
+divide the result by m and take the remainder in order to obtain an
+element in ℤm.
+
+We know that a has an inverse modulo m iff (a, m) = 1. These values are
+called units:
+
+ℤ/mℤ* = { a ∈  ℤ/mℤ: gcd(a, m) = 1 }
+ℤ/mℤ* = { a ∈  ℤ/mℤ: a has an inverse modulo m}
+
+This is called the group of units modulo m.
+- If a1 and a2 are units modulo m, a1 * a2 is a unit modulo m
+- This is not the case for addition
+
+Numbers that are coprime with m will be units, because their GCD is
+one (ie, they have no common divisors).
+
+We often want to know how many elements are in the set of units modulo
+m. This is called Euler's phi function:
+
+φ(n) = # (ℤ/mℤ*) = #{ 0 <= a <= m: gcd(a, m) = 1}
+(# = count in set)
