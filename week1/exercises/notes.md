@@ -233,3 +233,15 @@ Proof: in remarkable sheet for the week
 
 Division, Euclidean Algorithm and GCD: all covered in Furzey's course.
 
+## Exercise 2
+
+Find at least one proof of Fermat's little theorem online, and be
+prepared to share your understanding.
+
+## Fermat's Little Theorem
+
+Let p be a positive prime.
+For ∀ a ∈ Z:
+
+1) a^p ≡ a (mod p)
+2) If p does not divide a -> a^(p-1) ≡ 1 (mod p)
