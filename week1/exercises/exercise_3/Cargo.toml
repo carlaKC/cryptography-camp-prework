@@ -1,0 +1,8 @@
+[package]
+name = "exercise_3"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+primes = "0.4.0"
+exercise_1 = { path = "../exercise_1" }
