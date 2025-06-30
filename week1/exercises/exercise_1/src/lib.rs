@@ -39,15 +39,19 @@ pub fn binary_expansion(n: u64) -> Vec<bool> {
 /// returns a vector of the values n raised to the power of 2^ binary expansion.
 
 /// Computes the successive powers of two for the number provided, given the binary expansion of
-/// its exponent.
+/// its exponent, and returns a vector of the power % modulo.
 ///
 /// ```
 /// # use exercise_1::compute_successive_squares;
-/// let result = compute_successive_squares(3, vec![true, false, true]);
-/// let expected = vec![3_u64.pow(1), 3_u64.pow(4)];
+/// let result = compute_successive_squares(3, vec![true, false, true], 5);
+/// let expected = vec![3_u64.pow(1 %5), 3_u64.pow(4) % 5];
 /// assert_eq!(result, expected);
 /// ```
-pub fn compute_successive_squares(n: u64, exponent_bin_expansion: Vec<bool>) -> Vec<u64> {
+pub fn compute_successive_squares(
+    n: u64,
+    exponent_bin_expansion: Vec<bool>,
+    modulo: u64,
+) -> Vec<u64> {
     assert!(
         exponent_bin_expansion.len() <= 64,
         "only considering u64 integers"
@@ -60,7 +64,7 @@ pub fn compute_successive_squares(n: u64, exponent_bin_expansion: Vec<bool>) -> 
         .filter_map(|include_product| {
             let res = if *include_product { Some(val) } else { None };
 
-            val = val.pow(2);
+            val = (val * val) % modulo;
             multiplications += 1;
             res
         })
@@ -73,11 +77,13 @@ pub fn compute_successive_squares(n: u64, exponent_bin_expansion: Vec<bool>) -> 
 }
 
 /// Performs the fast powering algorithm to calculate: base ^ exponent (mod modulus).
-pub fn fast_powering_algorithm(base: u64, exponent: u64, modulo: u64) -> u64{
+pub fn fast_powering_algorithm(base: u64, exponent: u64, modulo: u64) -> u64 {
     let exponent_powers = binary_expansion(exponent);
-    let successive_squares = compute_successive_squares(base, exponent_powers);
+    let successive_squares = compute_successive_squares(base, exponent_powers, modulo);
 
-	successive_squares.iter().fold(1u64, |acc, &x| (acc * x) % modulo)
+    successive_squares
+        .iter()
+        .fold(1u64, |acc, &x| (acc * x) % modulo)
 }
 
 #[cfg(test)]
