@@ -245,3 +245,51 @@ For ∀ a ∈ Z:
 
 1) a^p ≡ a (mod p)
 2) If p does not divide a -> a^(p-1) ≡ 1 (mod p)
+
+## Reading 4
+
+Symmetric Ciphers:
+- Shared secret key k
+- Used for both encryption and decryption:
+  - e: K x M -> C
+  - d: K x C -> M
+  - Obviously: d(k, e(k, m)) = m (decryption of encryption = message)
+    Sometimes shortened to: dk(ek(m)) = m for all m ∈ M
+- dk is the inverse function of ek
+  -> This means that ek must be one-to-one
+
+Kerckhoff's Principle: the security of a crypto system should depend
+only on the secrecy of the key, and not secrecy of the algorithm itself.
+
+To be a successful ciper (K, M, C, e, d) must:
+- For k ∈ K, m ∈ M, it must be easy to compute ciphertext ek(m)
+- For k ∈ K, c ∈ C, it must be easy to compute the plaintest dk(c)
+- Given c1, c2 .. ∈ C encrypted using k ∈ K, it must be very difficult
+  to compute any of the corresponding plaintexts dk(c1), dk(c2).. 
+  without knowledge of K
+
+Another property that is desirable but more difficult to achieve is
+security against a chosen plaintext attack:
+- Given pairs of plaintexts and ciphertexts (m1, c1), (m2, c2)...
+  it must be difficult to decrypt any ciphertext c that is not in the
+  given list without knowing k.
+
+The encoding scheme is a method of converting one sort of data into
+another, eg characters to bytes (like ASCII). This scheme is known by
+everyone and used in the same way by everyone. It is convenient to view
+the plaintext space M as consisting of bit strings of a fixed length B,
+called the blocksize of the cipher. A plaintext message then consists of
+a list of message blocks chosen from M.
+
+- Bk = blocksize for keys
+  K = { k ∈ ℤ : 0 <= k < 2^Bk }
+- Bm = blocksize for messages
+  M = { m ∈ ℤ : 0 <= m < 2^Bm }
+- Bc = blocksize for ciphertext
+  C = { c ∈ ℤ : 0 <= m < 2^Bc }
+
+You need to choose Bk so that the possible values for K aren't trivially
+enumerable, otherwise an attacker can easily just check every possible
+key (brute force / exhaustive search).
+
+Resume on section 1.7.4
