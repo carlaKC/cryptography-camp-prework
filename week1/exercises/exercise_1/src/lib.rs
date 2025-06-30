@@ -3,7 +3,7 @@
 /// indicates whether 2^i should be included in the expansion.
 ///
 /// ```
-/// # use fast_powering_algorithm::binary_expansion;
+/// # use exercise_1::binary_expansion;
 /// let result = binary_expansion(13);
 /// assert_eq!(result, vec![true, false, true, true]); // 2^0 + 2^2 + 2^3 = 1 + 4 + 8 = 13
 /// ```
@@ -42,7 +42,7 @@ pub fn binary_expansion(n: u64) -> Vec<bool> {
 /// its exponent.
 ///
 /// ```
-/// # use fast_powering_algorithm::compute_successive_squares;
+/// # use exercise_1::compute_successive_squares;
 /// let result = compute_successive_squares(3, vec![true, false, true]);
 /// let expected = vec![3_u64.pow(1), 3_u64.pow(4)];
 /// assert_eq!(result, expected);
@@ -73,8 +73,7 @@ pub fn compute_successive_squares(n: u64, exponent_bin_expansion: Vec<bool>) -> 
 }
 
 /// Performs the fast powering algorithm to calculate: base ^ exponent (mod modulus).
-#[allow(dead_code)]
-fn fast_powering_algorithm(base: u64, exponent: u64, modulo: u64) -> u64{
+pub fn fast_powering_algorithm(base: u64, exponent: u64, modulo: u64) -> u64{
     let exponent_powers = binary_expansion(exponent);
     let successive_squares = compute_successive_squares(base, exponent_powers);
 
