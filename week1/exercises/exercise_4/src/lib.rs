@@ -40,7 +40,7 @@ impl ElGamalParams {
     }
 
     /// Generates a random key that is within 1 <= key <= prime -2.
-    fn random_key(&self) -> Result<u64, Error> {
+    pub fn random_key(&self) -> Result<u64, Error> {
         let key = rand::thread_rng().gen_range(1..=(self.prime - 2));
         if !self.validate_range(key) {
             return Err(Error::KeyOutOfBounds);
@@ -119,43 +119,47 @@ mod tests {
 
     #[test]
     fn test_encrypt_decrypt_roundtrip() {
-        let test_params = [
-            ElGamalParams {
-                generator: 33,
-                prime: 71,
-            },
-            ElGamalParams {
-                generator: 11,
-                prime: 23,
-            },
-            ElGamalParams {
-                generator: 3,
-                prime: 809,
-            },
-            ElGamalParams {
-                generator: 6,
-                prime: 17,
-            },
+        // Test vector format: (p, g, x, k, m, c1, c2)
+        let test_vectors = [
+            (71, 33, 62, 31, 15, 62, 18),
+            (23, 11, 6, 3, 10, 20, 22),
+            (809, 3, 68, 89, 100, 345, 517),
+            (17, 6, 5, 10, 13, 15, 9),
         ];
 
-        for params in test_params {
-            let privkey = params.random_key().unwrap();
+        for (p, g, privkey, eph_key, message, expected_c1, expected_c2) in test_vectors {
+            let params = ElGamalParams {
+                generator: g,
+                prime: p,
+            };
+
+            // Create cipher with known private key
             let cipher = ElGamalCipher::new(params, privkey).unwrap();
-            let eph_key = params.random_key().unwrap();
 
-            let test_messages = [1, 5, 10, params.prime - 2];
+            // Encrypt with known ephemeral key
+            let ciphertext = params
+                .el_gamal_encrypt(eph_key, cipher.pubkey(), message)
+                .unwrap();
 
-            for &message in &test_messages {
-                let ciphertext = params
-                    .el_gamal_encrypt(eph_key, cipher.pubkey(), message)
-                    .unwrap();
-                let decrypted = cipher.decrypt(ciphertext).unwrap();
-                assert_eq!(
-                    decrypted, message,
-                    "Roundtrip failed for message {} with params (g={}, p={})",
-                    message, params.generator, params.prime
-                );
-            }
+            // Verify ciphertext matches expected values
+            assert_eq!(
+                ciphertext.0, expected_c1,
+                "c1 mismatch for test vector (p={}, g={}, x={}, k={}, m={})",
+                p, g, privkey, eph_key, message
+            );
+            assert_eq!(
+                ciphertext.1, expected_c2,
+                "c2 mismatch for test vector (p={}, g={}, x={}, k={}, m={})",
+                p, g, privkey, eph_key, message
+            );
+
+            // Test decryption
+            let decrypted = cipher.decrypt(ciphertext).unwrap();
+            assert_eq!(
+                decrypted, message,
+                "Decryption failed for test vector (p={}, g={}, x={}, k={}, m={})",
+                p, g, privkey, eph_key, message
+            );
         }
     }
 
