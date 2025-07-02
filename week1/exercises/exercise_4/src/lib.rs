@@ -19,15 +19,23 @@ pub struct ElGamalParams {
 }
 
 impl ElGamalParams {
-    pub fn el_gamal_encrypt(&self, pubkey: u64, message: u64) -> Result<(u64, u64), Error> {
+    pub fn el_gamal_encrypt(
+        &self,
+        eph_key: u64,
+        pubkey: u64,
+        message: u64,
+    ) -> Result<(u64, u64), Error> {
         if !self.validate_range(message) {
             return Err(Error::MessageOutOfBounds);
         }
 
-        let nonce = self.random_key()?;
-        let c1 = exercise_1::fast_powering_algorithm(self.generator, nonce, self.prime);
+        if !self.validate_range(eph_key) {
+            return Err(Error::KeyOutOfBounds);
+        }
+
+        let c1 = exercise_1::fast_powering_algorithm(self.generator, eph_key, self.prime);
         let c2 =
-            message * exercise_1::fast_powering_algorithm(pubkey, nonce, self.prime) % self.prime;
+            message * exercise_1::fast_powering_algorithm(pubkey, eph_key, self.prime) % self.prime;
         Ok((c1, c2))
     }
 
@@ -66,13 +74,14 @@ pub struct ElGamalCipher {
 
 impl ElGamalCipher {
     /// Randomly generates a private key and creates a cipher with the parameters provided.
-    pub fn new(params: ElGamalParams) -> Result<Self, Error> {
-        let privkey = params.random_key()?;
-        let pubkey = exercise_1::fast_powering_algorithm(params.generator, privkey, params.prime);
+    pub fn new(params: ElGamalParams, privkey: u64) -> Result<Self, Error> {
+        if !params.validate_range(privkey) {
+            return Err(Error::KeyOutOfBounds);
+        }
 
         Ok(ElGamalCipher {
             privkey,
-            pubkey,
+            pubkey: exercise_1::fast_powering_algorithm(params.generator, privkey, params.prime),
             params,
         })
     }
@@ -98,9 +107,13 @@ mod tests {
     #[test]
     fn test_default_params() {
         let params = ElGamalParams::default();
-        let cipher = ElGamalCipher::new(params).unwrap();
+        let privkey = params.random_key().unwrap();
+        let cipher = ElGamalCipher::new(params, privkey).unwrap();
+        let eph_key = params.random_key().unwrap();
 
-        let ciphertext = params.el_gamal_encrypt(cipher.pubkey(), 3).unwrap();
+        let ciphertext = params
+            .el_gamal_encrypt(eph_key, cipher.pubkey(), 3)
+            .unwrap();
         assert_eq!(cipher.decrypt(ciphertext).unwrap(), 3);
     }
 
@@ -126,12 +139,16 @@ mod tests {
         ];
 
         for params in test_params {
-            let cipher = ElGamalCipher::new(params).unwrap();
+            let privkey = params.random_key().unwrap();
+            let cipher = ElGamalCipher::new(params, privkey).unwrap();
+            let eph_key = params.random_key().unwrap();
 
             let test_messages = [1, 5, 10, params.prime - 2];
 
             for &message in &test_messages {
-                let ciphertext = params.el_gamal_encrypt(cipher.pubkey(), message).unwrap();
+                let ciphertext = params
+                    .el_gamal_encrypt(eph_key, cipher.pubkey(), message)
+                    .unwrap();
                 let decrypted = cipher.decrypt(ciphertext).unwrap();
                 assert_eq!(
                     decrypted, message,
@@ -145,18 +162,20 @@ mod tests {
     #[test]
     fn test_message_out_of_bounds() {
         let params = ElGamalParams::default();
-        let cipher = ElGamalCipher::new(params).unwrap();
+        let privkey = params.random_key().unwrap();
+        let cipher = ElGamalCipher::new(params, privkey).unwrap();
+        let eph_key = params.random_key().unwrap();
 
-        let result = params.el_gamal_encrypt(cipher.pubkey(), 0);
+        let result = params.el_gamal_encrypt(eph_key, cipher.pubkey(), 0);
         assert!(matches!(result, Err(crate::Error::MessageOutOfBounds)));
 
-        let result = params.el_gamal_encrypt(cipher.pubkey(), params.prime - 1);
+        let result = params.el_gamal_encrypt(eph_key, cipher.pubkey(), params.prime - 1);
         assert!(matches!(result, Err(crate::Error::MessageOutOfBounds)));
 
-        let result = params.el_gamal_encrypt(cipher.pubkey(), params.prime);
+        let result = params.el_gamal_encrypt(eph_key, cipher.pubkey(), params.prime);
         assert!(matches!(result, Err(crate::Error::MessageOutOfBounds)));
 
-        let result = params.el_gamal_encrypt(cipher.pubkey(), params.prime + 100);
+        let result = params.el_gamal_encrypt(eph_key, cipher.pubkey(), params.prime + 100);
         assert!(matches!(result, Err(crate::Error::MessageOutOfBounds)));
     }
 }
