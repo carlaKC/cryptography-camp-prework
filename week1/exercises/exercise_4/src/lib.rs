@@ -1,4 +1,14 @@
-use rand::RngCore;
+use rand::Rng;
+
+#[derive(Debug)]
+pub enum Error {
+    /// Randomly generated key does not fall within requested bounds.
+    KeyOutOfBounds,
+    /// Message is too large for chosen prime.
+    MessageOutOfBounds,
+    /// Could not calculate the modular inverse of a value.
+    ModularInverseFailure,
+}
 
 /// The publicly defined parameters for an ElGamalCipher, used in conjunction with a provided
 /// pubkey to encrypt messages.
@@ -9,12 +19,31 @@ pub struct ElGamalParams {
 }
 
 impl ElGamalParams {
-    pub fn el_gamal_encrypt(&self, pubkey: u64, message: u64) -> (u64, u64) {
-        let nonce = rand::thread_rng().next_u64() % self.prime;
+    pub fn el_gamal_encrypt(&self, pubkey: u64, message: u64) -> Result<(u64, u64), Error> {
+        if !self.validate_range(message) {
+            return Err(Error::MessageOutOfBounds);
+        }
+
+        let nonce = self.random_key()?;
         let c1 = exercise_1::fast_powering_algorithm(self.generator, nonce, self.prime);
         let c2 =
             message * exercise_1::fast_powering_algorithm(pubkey, nonce, self.prime) % self.prime;
-        (c1, c2)
+        Ok((c1, c2))
+    }
+
+    /// Generates a random key that is within 1 <= key <= prime -2.
+    fn random_key(&self) -> Result<u64, Error> {
+        let key = rand::thread_rng().gen_range(1..=(self.prime - 2));
+        if !self.validate_range(key) {
+            return Err(Error::KeyOutOfBounds);
+        }
+        Ok(key)
+    }
+
+    /// Validates that a value remains within our field size, returning a boolean if the value is
+    /// valid.
+    fn validate_range(&self, val: u64) -> bool {
+        val >= 1 && val <= self.prime - 2
     }
 }
 
@@ -37,22 +66,23 @@ pub struct ElGamalCipher {
 
 impl ElGamalCipher {
     /// Randomly generates a private key and creates a cipher with the parameters provided.
-    pub fn new(params: ElGamalParams) -> Self {
-        let privkey = rand::thread_rng().next_u64() % params.prime; // TODO: < p-2
+    pub fn new(params: ElGamalParams) -> Result<Self, Error> {
+        let privkey = params.random_key()?;
         let pubkey = exercise_1::fast_powering_algorithm(params.generator, privkey, params.prime);
 
-        ElGamalCipher {
+        Ok(ElGamalCipher {
             privkey,
             pubkey,
             params,
-        }
+        })
     }
 
-    pub fn decrypt(&self, ciphertext: (u64, u64)) -> u64 {
+    pub fn decrypt(&self, ciphertext: (u64, u64)) -> Result<u64, Error> {
         let x = exercise_1::fast_powering_algorithm(ciphertext.0, self.privkey, self.params.prime);
-        let x_1 = exercise_3::modular_inverse(x, self.params.prime).unwrap();
+        let x_1 = exercise_3::modular_inverse(x, self.params.prime)
+            .map_err(|_| Error::ModularInverseFailure)?;
 
-        ciphertext.1 * x_1 % self.params.prime
+        Ok(ciphertext.1 * x_1 % self.params.prime)
     }
 
     /// Returns the pubkey to be used for message encryption.
@@ -66,11 +96,67 @@ mod tests {
     use crate::{ElGamalCipher, ElGamalParams};
 
     #[test]
-    fn test_basic() {
+    fn test_default_params() {
         let params = ElGamalParams::default();
-        let cipher = ElGamalCipher::new(params);
+        let cipher = ElGamalCipher::new(params).unwrap();
 
-        let ciphertext = params.el_gamal_encrypt(cipher.pubkey(), 3);
-        assert_eq!(cipher.decrypt(ciphertext), 3);
+        let ciphertext = params.el_gamal_encrypt(cipher.pubkey(), 3).unwrap();
+        assert_eq!(cipher.decrypt(ciphertext).unwrap(), 3);
+    }
+
+    #[test]
+    fn test_encrypt_decrypt_roundtrip() {
+        let test_params = [
+            ElGamalParams {
+                generator: 33,
+                prime: 71,
+            },
+            ElGamalParams {
+                generator: 11,
+                prime: 23,
+            },
+            ElGamalParams {
+                generator: 3,
+                prime: 809,
+            },
+            ElGamalParams {
+                generator: 6,
+                prime: 17,
+            },
+        ];
+
+        for params in test_params {
+            let cipher = ElGamalCipher::new(params).unwrap();
+
+            let test_messages = [1, 5, 10, params.prime - 2];
+
+            for &message in &test_messages {
+                let ciphertext = params.el_gamal_encrypt(cipher.pubkey(), message).unwrap();
+                let decrypted = cipher.decrypt(ciphertext).unwrap();
+                assert_eq!(
+                    decrypted, message,
+                    "Roundtrip failed for message {} with params (g={}, p={})",
+                    message, params.generator, params.prime
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_message_out_of_bounds() {
+        let params = ElGamalParams::default();
+        let cipher = ElGamalCipher::new(params).unwrap();
+
+        let result = params.el_gamal_encrypt(cipher.pubkey(), 0);
+        assert!(matches!(result, Err(crate::Error::MessageOutOfBounds)));
+
+        let result = params.el_gamal_encrypt(cipher.pubkey(), params.prime - 1);
+        assert!(matches!(result, Err(crate::Error::MessageOutOfBounds)));
+
+        let result = params.el_gamal_encrypt(cipher.pubkey(), params.prime);
+        assert!(matches!(result, Err(crate::Error::MessageOutOfBounds)));
+
+        let result = params.el_gamal_encrypt(cipher.pubkey(), params.prime + 100);
+        assert!(matches!(result, Err(crate::Error::MessageOutOfBounds)));
     }
 }
