@@ -4,3 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+exercise_1 = { path = "../exercise_1" }
+exercise_3 = { path = "../exercise_3" }
+rand = "0.8"
