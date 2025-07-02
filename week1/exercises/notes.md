@@ -599,4 +599,54 @@ Note:
 - Ciphertext is expressed in 2 x the lenth of plaintext
   -> This is called 2-to-one expansion
 
-Resume: pg 71
+How do we know that ElGamal depends on the DHP?
+- Fix prime p and base g for ElGamal encryption
+- Suppose attacker has access to an oracle that decrypts arbitrary
+  ElGamal ciphertexts using arbitrary ElGamal pubkeys
+- The attacker can then use this oracle to solve the DHP
+
+In DHP we have two public values:
+- A ≡  g^a (mod p)
+- B ≡  g^b (mod p)
+
+Which need to be used to calculate: g^ab (mod p)
+
+If we have an ElGamal oracle, we will send it:
+- Prime p
+- Base g
+- Public key A (which is g^a (mod p))
+- Ciphertext (c1, c2)
+
+The oracle will return (c1^a)-1 * c2 (mod p), which decrypts ciphertext.
+- Choose c1 = B
+- Choose c2 = 1
+
+Then the oracle will return:
+(B^a)-1 * 1
+(g^b)^a -1
+
+If we take the modular inverse of this, we get g^ab, which means that
+we have solved the DHP with this oracle. So if we have an oracle that
+can break ElGamal, we have an oracle that can break DHP.
+
+Group Theory:
+
+The characteristics that we are interested in for the group 𝔽p* with
+regard to multiplication are:
+- It has an identity element (1 * a = a)
+- Every a ∈ 𝔽p has an inverse (a * a^-1 = 1)
+- Multiplication is associatitive (a *(b * c) = (a * b) * c)
+- Multiplication is commutative (a*b = b*a)
+
+The same is true of addition, with an identity element of 0.
+
+-> Groups consist of a set of numbers and a rule denoted ★ which satisfy
+these identity, inverse, associatitivity and commutativity laws.
+-> They can be finite or infinite (|G| or #G).
+
+Examples of things that aren't groups:
+- Integers under multiplication: there aren't integer inverses for most
+  numbers.
+- Anything under matrix multiplication: order matters, not commutative.
+
+Resume on page 74 (already covered this in the abstract algebra section)
