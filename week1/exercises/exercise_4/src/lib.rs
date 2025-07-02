@@ -182,4 +182,40 @@ mod tests {
         let result = params.el_gamal_encrypt(eph_key, cipher.pubkey(), params.prime + 100);
         assert!(matches!(result, Err(crate::Error::MessageOutOfBounds)));
     }
+
+    #[test]
+    fn test_bad_privkey() {
+        let params = ElGamalParams::default();
+
+        let result = ElGamalCipher::new(params, 0);
+        assert!(matches!(result, Err(crate::Error::KeyOutOfBounds)));
+
+        let result = ElGamalCipher::new(params, params.prime - 1);
+        assert!(matches!(result, Err(crate::Error::KeyOutOfBounds)));
+
+        let result = ElGamalCipher::new(params, params.prime);
+        assert!(matches!(result, Err(crate::Error::KeyOutOfBounds)));
+
+        let result = ElGamalCipher::new(params, params.prime + 100);
+        assert!(matches!(result, Err(crate::Error::KeyOutOfBounds)));
+    }
+
+    #[test]
+    fn test_bad_eph_key() {
+        let params = ElGamalParams::default();
+        let privkey = params.random_key().unwrap();
+        let cipher = ElGamalCipher::new(params, privkey).unwrap();
+
+        let result = params.el_gamal_encrypt(0, cipher.pubkey(), 10);
+        assert!(matches!(result, Err(crate::Error::KeyOutOfBounds)));
+
+        let result = params.el_gamal_encrypt(params.prime - 1, cipher.pubkey(), 10);
+        assert!(matches!(result, Err(crate::Error::KeyOutOfBounds)));
+
+        let result = params.el_gamal_encrypt(params.prime, cipher.pubkey(), 10);
+        assert!(matches!(result, Err(crate::Error::KeyOutOfBounds)));
+
+        let result = params.el_gamal_encrypt(params.prime + 100, cipher.pubkey(), 10);
+        assert!(matches!(result, Err(crate::Error::KeyOutOfBounds)));
+    }
 }
