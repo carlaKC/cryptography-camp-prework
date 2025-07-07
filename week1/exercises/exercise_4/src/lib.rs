@@ -80,7 +80,7 @@ impl ElGamalCipher {
         }
 
         Ok(ElGamalCipher {
-            privkey,
+            privkey, // TODO: this doesn't have to be a group element?
             pubkey: exercise_1::fast_powering_algorithm(params.generator, privkey, params.prime),
             params,
         })
