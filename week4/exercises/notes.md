@@ -203,5 +203,41 @@ EUF-CMA secure.
 Key insight: AGM forces A' to reveal how it constructed R*, allowing us to set up algebraic equations
 we can solve for the discrete log.
 
-Sigma Protocols:
-- 
+### Exercise 2 - Notation
+
+The thing that's most confusing here
+
+One of the confuxing things
+
+One of the confusing things in the reference proof we're given is that
+there are [different ways](https://cryptocamp.website/t/week-4-readings-and-exercises/127/4?u=carla)
+to express Scnhorr Signature schemes.
+
+
+Generate Keys:
+sk <= Zp
+pk = g^sk
+
+For some message m:
+k <- Zp
+R = g^k
+
+Challenge:
+e = H(R, pk, m)
+
+Standard Scnhorr Signature:
+- Return signature and nonce:
+  - s = k + e*x
+  - (s, R)
+- Verify Signature:
+  - e = H(R, pk, m)
+  - Check: R = g^s * pk^-e
+    - This is equivalent to: g^s = R * pk^e
+
+Returning Challenge:
+- Return challenge and signature:
+  - s = k + e*x
+  - Return (e, s)
+- Verify signature:
+  - Calculate: R' = g^s * pk^-e
+  - Check: H(R', pk, m) = e
